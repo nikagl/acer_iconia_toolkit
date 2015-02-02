@@ -1,0 +1,239 @@
+v0.9.0
+- A1-811: Kitkat Support
+- A1-xxx: Added proper su-binary
+- Added timestamps
+- Added descision for Superuser/Supersu
+- Added selection for Xposed **not working yet**
+- Added selection to continue automatically (also import the system instead of waiting for enter)
+- Removed invalid quote and double exit command
+- Added forward delete of characters to make sure Run command is empty
+- Added some additional messages during the root process
+
+v0.8.5
+======
+- A1-810: Fixed target directory for system image (no permissions for /cache directory since Kitkat)
+- A1-810: Fixed root from scratch for Kitkat versions (thanks to Just_Another_N00b)
+
+v0.8.4
+======
+- A1-810: Fixed root for Android Kitkat >= 4.4.2
+- A1-810: Fixed abd devices id, changed sind Kitkat update
+
+v0.8.3
+======
+- Fixed pulling system.img.gz from Windows
+
+v0.8.2
+======
+- New: Supporting B1-720
+
+v0.8.1
+======
+- A1-81x: Fixed missing read/write permissions for /system partition (thanks
+to twu2!)
+- All other devices: fixed missing path to su binary (thanks to arzakon.nn)
+
+v0.8.0
+======
+- New: Pull system.img.gz from your tablet
+- New: Supporting A3-A10
+
+v0.7.8
+======
+- fixed Swap Internal to External for A1 and B1-710
+
+v0.7.7
+======
+- Supporting Swap Internal to External for A1 and B1-710
+- fixed bug in root from scratch: checking for /bin/su although it's not there
+
+v0.7.6
+======
+- Supporting B1-711
+- A1-810/A1-811: support root with /system Read/Write permissions
+
+v0.7.5
+======
+- A1-810/A1-811: support root with /system Read/Write permissions
+
+v0.7.4
+======
+- Supporting A1-811. Thanks to 888jonathan
+
+v0.7.3
+======
+- Fixed backing up data for swap internal to external, even if user chose to not backup
+- Updated Odex binaries to Universal Odex Script Version 6.2 (thanks to MatrixDJ96)
+
+v0.7.2
+======
+- New: Swap Internal / External SD for A1-810
+
+v0.7.1
+======
+- B1-A710 is also supported.
+- New: Swap Internal / External SD for B1-710/B1-A710
+- Fix: Checking Firmware version for B1-710/B1-A710 properly
+
+v0.7.0
+======
+- New: Supporting B1-710. Features are the same as for B1-A71 (EXPERIMENTAL! MUST BE TESTED FIRST!) (thanks to bsdnix)
+- New: Odexing entire ROM for all Iconias. Acer Iconia A1-810 must have RW permissions for /system, see workaround from sodaFR (thanks to MatrixDJ96 and jordirpz)
+- Unroot: removing /system/xbin/su and /system.bin/.ext/.su as well (this should now unroot for real, thanks to sodaFR)
+- Added additional info about system_image being a folder in toolkit directory on the pc as some seem to be confused.
+- cleaned up code
+
+v0.6.3
+======
+- A1-810: Fixed wrong driver URL
+- A1-810: Possible fix for unroot feature
+- minor bugfixes
+
+v0.6.2
+======
+- A1-810: Since update to RV18RC07 each A1-810 has its own device ID. Therefore up from v0.6.2 any device id is accepted for rooting A1-810. Make sure no other devices are plugged in, when applying my toolkit!
+
+v0.6.1
+======
+- Fixed critical bug that made rooting with system image impossible
+- Fixed exception when debug mode is turned on
+
+v0.6.0
+======
+- Supporting Acer Iconia A1-810 now as well but only root and unroot for now (Tester needed. I don't own a A1-810)
+- Big thanks to ak6 that bravely used my toolkit to root his A1-810 and provided me the A1-810 specific data.
+- Fixed printing error message even if device has "android 0x0000000026500000" in dumchar_info
+
+v0.5.6
+======
+- fixed: permission errors for pulling/pushing system.img.gz from/to /cache
+- more debugging output, less output without debug argument
+- trying to start telnet server on tablet more secure
+- root: checking if system.img.gz is available in folder system_image
+- fixed: redundant prompting to unlock tablet for starting server
+
+v0.5.5
+======
+- Tool now allows rooting devices with "15e" instead of "265" in dumchar_info. Do this on your own risk. User is warned and must agree.
+- fixed: freeze after pushing busybox
+- fixed: starting telnet before busybox is copied (this made root on the 1st run impossible)
+- debug parameter -d / --debug works now for all features and os
+- repeat prompting user for unlocking tablet, if tablet is still turned off or locked
+- checking if telnet server process is running on tablet
+
+v0.5.4
+======
+- Windows: Added parameter -d or --debug. If toolkit is started with this parameter EVERYTHING will be printed. This only works for rooting under Windows, because this part is used most.
+- Added feature to quit application by typing 'q', when a selection is asked.
+- If an invalid input is entered, application is not left, but asks again.
+- Linux: added shell as a more comfortable way to start the tool
+
+v0.5.3
+======
+- Windows: pushing system.img.gz the way i did it back in 0.2.9, hopefully this will fix permissions bug
+- Linux: Providing a clean binary with everything included, thanks to pyinstaller
+
+v0.5.2
+======
+- Windows: fixed pushing system.img.gz to cache.
+- Windows: Providing a clean binary with everything included, thanks to pyinstaller
+
+v0.5.1d
+======
+- pushing system.img.gz onto tablet like it was done before v0.5.x. Because a user reports he gets the good old permissions denied error.
+
+v0.5.1
+======
+- Windows: Internal 2 External: fixed deleting recursively all files from sd without prompt.
+- restarting toolkit, if a wrong input entered by user
+- cleaned up root dir of toolkit, by moving most libraries, needed for windows version to bin/nt. But python27.dll and w9xpopen.exe must remain. I hid them though. Now it looks cleaner.
+
+v0.5.0
+======
+- added Internal 2 External Swap
+- reduced verbose output
+- added more checks to avoid errors
+
+﻿v0.4.2
+======
+- Stop exiting Application, if firmware version is not up to date. Only warning the user.
+
+v0.4.1
+======
+- Linux: fixed Super Auto Root
+
+v0.4.0
+======
+- Introducing Super Auto Root - starting telnet server automatically on tablet, no more dialing, no more entering a complex command (many thanks to bullbrand and pawitp!!!)
+- Checking for firmware version and thus avoiding bootloop.
+
+v0.3.1
+======
+- ex Dialer & Contacts no more needed, Engineering Mode is directly entered (thanks to bullbrand and pawitp!)
+- fixed unroot
+- added check if su binary is really removed
+
+v0.3.0
+======
+- added unroot feature (unroot by rm /system/bin/su)
+- unique output for windows and unix
+- cleaned up code
+
+v0.2.9
+======
+- fixed writing back rooted system.img.gz (same problem as with chmod)
+
+v0.2.8d
+======
+- added debugging output to figure out permissions bug
+
+v0.2.8
+======
+- Finally fixed permissions bug (This time for real!)
+
+v0.2.7
+======
+- Removed call to 'adb root' from v0.2.6 as it could freeze the program
+
+v0.2.6
+======
+- Fixed permissions bug, by chmod 777 /cache with telnet session (thanks to pawitp!!)
+
+v0.2.5
+======
+- Fixed wrong indentation
+
+v0.2.4
+======
+- Windows: Fixed wrong chmod command
+- Windows: calling adb root at the beginning, in case this is causing permission errors for adb push
+
+v0.2.3
+======
+- Windows: Littles changes to fix permissions bug for adb push command
+
+v0.2.2
+======
+- Windows: Fixed missing Permissions bug
+- Added Progress Bar for writing rooted system.img.gz
+
+v0.2.1
+======
+- Windows: Providing an .exe, so Python is no more needed for Windows users. But you could still use the Python script.
+- Unix: Python3 compatibility fixes
+
+v0.2.0
+======
+- supporting windows 64 and 32 bit (only for rooting with prerooted system.img.gz)
+- Linux: added option to choose between 'Root from scratch' and 'Root from prerooted image'
+- supporting all versions between python 2.7.4 and 3.3
+
+v0.1.1
+======
+- supporting linux 64 AND 32bit
+- instructions at the beginning
+- make compatible to python 3.3
+
+v0.1.0
+======
+- initial release, only supporting linux 64bit

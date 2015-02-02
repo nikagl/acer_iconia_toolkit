@@ -1,0 +1,1395 @@
+#!/system/bin/sh
+# Based On Universal Odex 3.1
+# Modded And Updated By MatrixDJ96
+# Language: English
+# Last Update: 07-08-2013
+# Enjoy! :-)
+
+bb="busybox"
+
+info() {
+$bb echo "Universal Odex Script"
+$bb echo "Version 6.2"
+$bb echo
+if $bb [ `$bb grep "ro.product.model=" /system/build.prop` ];
+then
+	device=`$bb grep "ro.product.model=" /system/build.prop | $bb sed 's:ro.product.model=::g'`
+	$bb echo "Product Model: $device"
+else
+	$bb echo "Unknow Device"
+fi;
+if $bb [ `$bb grep "ro.modversion=" /system/build.prop` ];
+then
+	romname=`$bb grep "ro.modversion=" /system/build.prop | $bb sed 's:ro.modversion=::g' | $bb sed 's:-: :g' | $bb sed 's:_: :g'`
+	$bb echo "Installed Rom: $romname"
+else
+	$bb echo "Unknown Rom"
+fi;
+if $bb [ `$bb grep "ro.build.version.release=" /system/build.prop` ];
+then
+	romversion=`$bb grep "ro.build.version.release=" /system/build.prop | $bb sed 's:ro.build.version.release=::g'`
+	if $bb [ `$bb grep "ro.build.version.release=2.2" /system/build.prop` ];
+	then
+		info="Froyo"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=2.3" /system/build.prop` ];
+	then
+		info="Gingerbread"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=4.0" /system/build.prop` ];
+	then
+		info="Ice Cream Sandwich"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=4.1" /system/build.prop` ];
+	then
+		info="Jelly Bean"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=4.2" /system/build.prop` ];
+	then
+		info="Jelly Bean"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=4.3" /system/build.prop` ];
+	then
+		info="Jelly Bean"
+	fi;
+	if $bb [ `$bb grep "ro.build.version.release=5.0" /system/build.prop` ];
+	then
+		info="Key Lime Pie"
+	fi;
+	$bb echo "Android Version: $romversion ($info)"
+else
+	$bb echo "Unknow Android Version"
+fi;
+cd /
+if $bb [ -d /preload ];
+then
+	PART="yes"
+else
+	PART="no"
+fi;
+}
+
+su() {
+$bb echo "Checking For Root Permissions..."
+if $bb [[ "`$bb id -u`" == "0" ]];
+then
+	$bb echo "Root Permissions Acquired!"
+	$bb echo
+else
+	$bb echo "Could Not Acquire Root Permissions..."
+	$bb echo
+	$bb echo "Type 'su' And Try Again"
+	$bb echo
+	exit 1
+fi;
+}
+
+preparing() { 
+$bb echo "Mounting File System..."
+$bb mount -o remount, rw /
+$bb mount -o remount, rw /data
+if $bb [[ "$PART" == "yes" ]];
+then
+	$bb mount -o remount, rw /preload
+fi;
+$bb mount -o remount, rw /system
+$bb echo
+$bb echo "Setting Variable and Costant..."
+DIR=/
+DIRDAL=/data/dalvik-cache
+DIRDAPP=/data/app
+DIRSAPP=/system/app
+DIRFRAME=/system/framework
+if $bb [[ "$PART" == "yes" ]];
+then
+	DIRPAPP=/preload/symlink/system/app
+fi;
+DIRX=/system/xbin
+TMPDIR=/odex
+$bb echo
+cd $DIRX
+if $bb [ -f busybox ];
+then
+	if $bb [ -f busyodex ];
+	then
+		$bb echo "Setting BusyBox..."
+		$bb cp -p busybox bb1
+		$bb cp -p busyodex busybox
+	fi;
+fi;
+cd $DIR
+if $bb [ -f /sdcard/csa.txt ];
+then
+	CSA=`$bb grep " " /sdcard/csa.txt`
+fi;
+if $bb [ -f /sdcard/cpa.txt ];
+then
+	CPA=`$bb grep " " /sdcard/cpa.txt`
+fi;
+if $bb [ -f /sys/class/timed_output/vibrator/enable ];
+then
+	vibration="/sys/class/timed_output/vibrator/enable"
+else
+	vibration="none"
+fi;
+if $bb [ ! -z "${BOOTCLASSPATH+xx}" ];
+then
+	dexBCP=$BOOTCLASSPATH
+	dexObjectList=`$bb echo $BOOTCLASSPATH \
+		| $bb sed 's:\:: :g' \
+		| $bb sed 's:/system/framework/::g'`
+fi;
+$bb echo "BOOTCLASSPATCH: $dexBCP"
+$bb echo
+$bb echo "BOOTSTRAP: $dexObjectList"
+$bb echo
+$bb echo "Grepping 'preloaded-classes'..."
+$bb echo
+cd $DIRFRAME
+$bb unzip -l framework.jar
+if $bb [[ "$?" != "0" ]];
+then
+	$bb echo
+	$bb echo "Impossible Unzip Framework.jar To Grep 'preloaded-classes'!"
+	$bb echo
+	cd $DIRX
+	if $bb [ -f bb1 ];
+	then
+		$bb echo "Restoring BusyBox..."
+		$bb mv -f bb1 busybox
+    fi; 
+	$bb echo
+	$bb echo "Exiting..."
+	$bb echo
+	exit 1
+else
+	$bb unzip -l framework.jar | $bb grep -q preloaded-classes
+	if $bb [[ "$?" != "0" ]];
+	then
+		$bb echo
+		$bb echo "Impossible 'preloaded-classes' Because File Not Found!"
+		if $bb [[ "$vibration" != "none" ]];
+		then
+			$bb echo 200 > $vibration
+		fi;
+		$bb echo
+		cd $DIRX
+		if $bb [ -f bb1 ];
+		then
+			$bb echo "Restoring BusyBox..."
+			$bb mv -f bb1 busybox
+		fi; 
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+		$bb unzip -l framework.jar | $bb grep -q preloaded-classes >/dev/null 2>&1
+		if $bb [[ "$?" != "0" ]];
+		then
+			$bb echo
+			$bb echo "Going In Bind!"
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb sleep 2
+		fi;
+	fi;
+fi;
+if $bb [ ! -d $TMPDIR ];
+then
+	$bb echo
+	$bb echo "Creating Temp..."
+	$bb mkdir $TMPDIR
+	$bb echo
+else
+	$bb echo
+	$bb echo "Temp Exists"
+	$bb echo
+fi;
+$bb echo "All Ok"
+$bb echo
+}
+
+freepre() {
+FREEP=`$bb df -Pm /preload | $bb tail -n 1 | $bb awk '{print $4}'`
+$bb echo "Free Space In Preload: $FREES Mb"
+TOTALP=`$bb df -Pm /preload | $bb tail -n 1 | $bb awk '{print $2}'`
+NECPA=`$bb expr $TOTALS \/ 100 \* 25`
+CONPA=`$bb expr $FREES \>= $NECPA`
+NECCPA=`$bb expr $TOTALS \/ 100 \* 22`
+CONCPA=`$bb expr $FREES \>= $NECCPA`
+}
+
+cpr() {
+if  $bb [[ "$CONPA" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+ccpa() {
+if  $bb [[ "$CONCPA" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+freesys() {
+FREES=`$bb df -Pm /system | $bb tail -n 1 | $bb awk '{print $4}'`
+$bb echo "Free Space In System: $FREES Mb"
+TOTALS=`$bb df -Pm /system | $bb tail -n 1 | $bb awk '{print $2}'`
+NECSBS=`$bb expr $TOTALS \/ 100 \* 5`
+NECSFR=`$bb expr $TOTALS \/ 100 \* 10`
+NECSCSA=`$bb expr $TOTALS \/ 100 \* 12`
+NECSFCS=`$bb expr $TOTALS \/ 100 \* 21`
+NECSSYS=`$bb expr $TOTALS \/ 100 \* 15`
+NECSALL=`$bb expr $TOTALS \/ 100 \* 25`
+CONSBS=`$bb expr $FREES \>= $NECSBS`
+CONSFR=`$bb expr $FREES \>= $NECSFR`
+CONSCSA=`$bb expr $FREES \>= $NECSCSA`
+CONSFCS=`$bb expr $FREES \>= $NECSFCS`
+CONSSYS=`$bb expr $FREES \>= $NECSSYS`
+CONSALL=`$bb expr $FREES \>= $NECSALL`
+}
+
+cbs() {
+if $bb [[ "$CONSBS" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+cfr() {
+if $bb [[ "$CONSFR" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+ccsa() {
+if  $bb [[ "$CONSCSA" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+csys() {
+if  $bb [[ "$CONSSYS" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+cfcs() {
+if  $bb [[ "$CONSFCS" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+call() {
+if $bb [[ "$CONSALL" == "1" ]];
+then
+	$bb echo
+	$bb echo "Sufficient Space!"
+	$bb echo
+else
+	$bb echo "Insufficient Space..."
+	$bb echo
+	$bb echo "Continue? Yes/No"
+	read answer
+	if $bb [[ "$answer" == "yes" ]] || $bb [[ "$answer" == "y" ]] || $bb [[ "$answer" == "Yes" ]] || $bb [[ "$answer" == "Y" ]];
+	then
+		$bb echo
+		$bb echo "Ok..."
+		$bb echo
+	else
+		$bb echo
+		$bb echo "Exiting..."
+		$bb echo
+		exit 1
+	fi;
+fi;
+}
+
+go() {
+$bb echo "Odexing After:    3s"
+if $bb [[ "$vibration" != "none" ]];
+then
+	$bb echo 100 > $vibration
+fi;
+$bb sleep 1
+$bb echo "                  2s"
+if $bb [[ "$vibration" != "none" ]];
+then
+	$bb echo 100 > $vibration
+fi;
+$bb sleep 1
+$bb echo "                  1s"
+if $bb [[ "$vibration" != "none" ]];
+then
+	$bb echo 100 > $vibration
+fi;
+$bb sleep 1
+$bb echo
+time=`$bb date +%T`
+$bb echo "Script Starting at $time"
+if $bb [[ "$vibration" != "none" ]];
+then
+	$bb echo 200 > $vibration
+fi;
+$bb sleep 1
+$bb echo 
+}
+
+bs() {
+$bb echo "Odexing BootStrap..."
+$bb sleep 1
+$bb echo
+cd $DIRFRAME
+for core in $dexObjectList
+	do
+	coreodex=`$bb echo $core | $bb sed -e 's:.jar:.odex:g'`
+	if $bb [ ! -f $coreodex ];
+	then
+		$bb echo "Odexing $core..."
+		dexopt-wrapper $core $coreodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			$bb echo "Removing 'classes.dex' from $core..."
+			zip -q -d $core classes.dex
+			$bb echo "Setting Permission of $core..."
+			$bb chmod 644 $core
+			$bb echo "Setting Permission of $coreodex..."
+			$bb chmod 644 $coreodex
+			if $bb [ -f $DIRDAL/system@framework@$core@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $core..."
+				$bb rm -f $DIRDAL/system@framework@$core@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $core"
+			$bb echo
+			$bb rm -f $coreodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$coreodex Exists"
+		$bb echo
+	fi;
+	done
+}
+
+fr() {
+$bb echo "Odexing Framework..."
+$bb sleep 1
+$bb echo
+cd $DIRFRAME
+for frame in *.jar
+	do
+	frameodex=`$bb echo $frame | $bb sed -e 's:.jar:.odex:g'`
+	if $bb [ ! -f $frameodex ];
+		then
+		$bb echo "Odexing $frame..."
+		dexopt-wrapper $frame $frameodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			$bb echo "Removing 'classes.dex' from $frame..."
+			zip -q -d $frame classes.dex
+			$bb echo "Setting Permission of $frame..."
+			$bb chmod 644 $frame
+			$bb echo "Setting Permission of $frameodex..."
+			$bb chmod 644 $frameodex
+			if $bb [ -f $DIRDAL/system@framework@$frame@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $frame..."
+				$bb rm -f $DIRDAL/system@framework@$frame@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $frame"
+			$bb echo
+			$bb rm -f $frameodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$frameodex Exists"
+		$bb echo
+	fi;
+	done
+}
+
+csa() {
+$bb echo "Odexing Custom System Apps..."
+$bb sleep 1
+$bb echo
+cd $DIRSAPP
+if $bb [ -f AndroidTerm.odex ];
+then
+	$bb echo "Skipping AndroidTerm..."
+	$bb echo
+else
+	$bb cp -p AndroidTerm.apk AndroidTerm.odex
+	$bb cp -p AndroidTerm.apk AT.apk
+fi;
+if $bb [ -f RootExplorer.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p RootExplorer.apk RootExplorer.odex
+	$bb echo
+fi;
+for capp in $CSA
+	do
+	cappodex=`$bb echo $capp | $bb sed -e 's:.apk:.odex:g'`
+	if $bb [ ! -f $cappodex ];
+	then
+		$bb echo "Odexing $capp..."
+		dexopt-wrapper $capp $cappodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			unzip -l $app | grep -q /lib
+			if [[ "$?" != "1" ]];
+			then
+				$bb echo "Removing libs from $app..."
+				zip -q -d $app *.so
+			fi;
+			$bb echo "Removing 'classes.dex' from $capp..."
+			zip -q -d $capp classes.dex
+			$bb echo "Zipalign from $capp..."
+			zipalign -f 4 $capp $TMPDIR/$capp
+			$bb cat $TMPDIR/$capp > $capp
+			$bb rm -f $TMPDIR/$capp
+			$bb echo "Setting Permission of $capp..."
+			$bb chmod 644 $capp
+			$bb echo "Setting Permission of $cappodex..."
+			$bb chmod 644 $cappodex
+			if $bb [ -f $DIRDAL/system@app@$capp@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $capp..."
+				$bb rm -f $DIRDAL/system@app@$capp@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $capp"
+			$bb echo
+			$bb rm -f $cappodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$cappodex Exists"
+		$bb echo
+	fi;
+	done
+}
+
+sys() {
+$bb echo "Odexing System Apps..."
+$bb sleep 1
+$bb echo
+cd $DIRSAPP
+if $bb [ -f AndroidTerm.odex ];
+then
+	$bb echo "Skipping AndroidTerm..."
+	$bb echo
+else
+	$bb cp -p AndroidTerm.apk AndroidTerm.odex
+	$bb cp -p AndroidTerm.apk AT.apk
+fi;
+if $bb [ -f RootExplorer.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p RootExplorer.apk RootExplorer.odex
+fi;
+for app in *.apk
+	do
+	appodex=`$bb echo $app | $bb sed -e 's:.apk:.odex:g'`
+	$bb echo
+	$bb readlink $app
+	if $bb [ $? -eq 1 ];
+	then
+		if $bb [ ! -f $appodex ];
+		then
+			$bb echo "Odexing $app..."
+			dexopt-wrapper $app $appodex $dexBCP
+			if $bb [ $? -eq 0 ];
+			then
+				unzip -l $app | grep -q /lib
+				if [[ "$?" != "1" ]];
+				then
+					$bb echo "Removing libs from $app..."
+					zip -q -d $app *.so
+				fi;
+				$bb echo "Removing 'classes.dex' from $app..."
+				zip -q -d $app classes.dex
+				$bb echo "Zipalign from $app..."
+				zipalign -f 4 $app $TMPDIR/$app
+				$bb cat $TMPDIR/$app > $app
+				$bb rm -f $TMPDIR/$app
+				$bb echo "Setting Permission of $app..."
+				$bb chmod 644 $app
+				$bb echo "Setting Permission of $appodex..."
+				$bb chmod 644 $appodex
+				if $bb [ -f $DIRDAL/system@app@$app@classes.dex ];
+				then
+					$bb echo "Removing Dalvik of $app..."
+					$bb rm -f $DIRDAL/system@app@$app@classes.dex
+				fi;
+			else
+				if $bb [[ "$vibration" != "none" ]];
+				then
+					$bb echo 200 > $vibration
+				fi;
+				$bb echo "Failed To Odex $app"
+				$bb rm -f $appodex
+				$bb sleep 1
+			fi;
+		else
+			$bb echo "$appodex Exists"
+		fi;
+	fi;
+	done
+$bb echo
+}
+
+pa() {
+$bb echo "Odexing Preload Apps..."
+$bb sleep 1
+$bb echo
+cd $DIRPAPP
+if $bb [ -f RootExplorer.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p RootExplorer.apk RootExplorer.odex
+	$bb echo
+fi;
+for papp in *.apk
+	do
+	pappodex=`$bb echo $papp | $bb sed -e 's:.apk:.odex:g'`
+	if $bb [ ! -f $pappodex ];
+	then
+		$bb echo "Odexing $papp..."
+		dexopt-wrapper $papp $pappodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			unzip -l $app | grep -q /lib
+			if [[ "$?" != "1" ]];
+			then
+				$bb echo "Removing libs from $app..."
+				zip -q -d $app *.so
+			fi;
+			$bb ln -s $pappodex $DIRSAPP/$pappodex
+			$bb echo "Removing 'classes.dex' from $papp..."
+			zip -q -d $papp classes.dex
+			$bb echo "Zipalign from $papp..."
+			zipalign -f 4 $papp $TMPDIR/$papp
+			$bb cat $TMPDIR/$papp > $papp
+			$bb rm -f $TMPDIR/$papp
+			$bb echo "Setting Permission of $papp..."
+			$bb chmod 644 $papp
+			$bb echo "Setting Permission of $pappodex..."
+			$bb chmod 644 $pappodex
+			if $bb [ -f $DIRDAL/system@app@$papp@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $papp..."
+				$bb rm -f $DIRDAL/system@app@$papp@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $papp"
+			$bb echo
+			$bb rm -f $pappodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$pappodex Exists"
+		$bb echo
+	fi;
+	done
+if $bb [ -f RootExplorer.odex ];
+then
+	$bb echo "Restoring RootExplorer.apk..."
+	$bb rm -f RootExplorer.odex 
+	$bb echo
+fi;
+}
+
+cpa() {
+$bb echo "Odexing Custom Preload Apps..."
+$bb sleep 1
+$bb echo
+cd $DIRPAPP
+if $bb [ -f RootExplorer.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p RootExplorer.apk RootExplorer.odex
+	$bb echo
+fi;
+for pcapp in $CPA
+	do
+	pcappodex=`$bb echo $pcapp | $bb sed -e 's:.apk:.odex:g'`
+	if $bb [ ! -f $pcappodex ];
+	then
+		$bb echo "Odexing $pcapp..."
+		dexopt-wrapper $pcapp $pcappodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			unzip -l $app | grep -q /lib
+			if [[ "$?" != "1" ]];
+			then
+				$bb echo "Removing libs from $app..."
+				zip -q -d $app *.so
+			fi;
+			$bb ln -s $pappodex $DIRSAPP/$pappodex
+			$bb echo "Removing 'classes.dex' from $pcapp..."
+			zip -q -d $pcapp classes.dex
+			$bb echo "Removing libs from $pcapp..."
+			zip -q -d $pcapp *.so
+			$bb echo "Zipalign from $pcapp..."
+			zipalign -f 4 $pcapp $TMPDIR/$pcapp
+			$bb cat $TMPDIR/$pcapp > $pcapp
+			$bb rm -f $TMPDIR/$pcapp
+			$bb echo "Setting Permission of $pcapp..."
+			$bb chmod 644 $pcapp
+			$bb echo "Setting Permission of $pcappodex..."
+			$bb chmod 644 $pcappodex
+			if $bb [ -f $DIRDAL/system@app@$pcapp@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $pcapp..."
+				$bb rm -f $DIRDAL/system@app@$pcapp@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $pcapp"
+			$bb echo
+			$bb rm -f $pcappodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$pcappodex Exists"
+		$bb echo
+	fi;
+	done
+}
+
+dat() {
+$bb echo "Odexing Data Apps..."
+$bb sleep 1
+$bb echo
+cd $DIRDAPP
+if $bb [ -f com.speedsoftware.rootexplorer-1.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p com.speedsoftware.rootexplorer-1.apk com.speedsoftware.rootexplorer-1.odex
+	$bb echo
+fi;
+if $bb [ -f com.speedsoftware.rootexplorer-2.apk ];
+then
+	$bb echo "Skipping RootExplorer..."
+	$bb cp -p com.speedsoftware.rootexplorer-2.apk com.speedsoftware.rootexplorer-2.odex
+	$bb echo
+fi;
+for dapp in *.apk
+	do
+	dappodex=`$bb echo $dapp | $bb sed -e 's:.apk:.odex:g'`
+	if $bb [ ! -f $dappodex ];
+	then
+		$bb echo "Odexing $dapp..."
+		dexopt-wrapper $dapp $dappodex $dexBCP
+		if $bb [ $? -eq 0 ];
+		then
+			$bb echo "Removing 'classes.dex' from $dapp..."
+			zip -q -d $dapp classes.dex
+			$bb echo "Zipalign from $dapp..."
+			zipalign -f 4 $dapp $TMPDIR/$dapp
+			$bb cat $TMPDIR/$dapp > $dapp
+			$bb rm -f $TMPDIR/$dapp
+			$bb echo "Setting Permission of $dapp..."
+			$bb chmod 644 $dapp
+			$bb echo "Setting Permission of $dappodex..."
+			$bb chmod 644 $dappodex
+			if $bb [ -f $DIRDAL/data@app@$dapp@classes.dex ];
+			then
+				$bb echo "Removing Dalvik of $dapp..."
+				$bb rm -f $DIRDAL/data@app@$dapp@classes.dex
+			fi;
+			$bb echo
+		else
+			if $bb [[ "$vibration" != "none" ]];
+			then
+				$bb echo 200 > $vibration
+			fi;
+			$bb echo "Failed To Odex $dapp"
+			$bb echo
+			$bb rm -f $dappodex
+			$bb sleep 1
+		fi;
+	else
+		$bb echo "$dappodex Exists"
+		$bb echo
+	fi;
+	done
+if $bb [ -f com.speedsoftware.rootexplorer-1.odex ];
+then
+	$bb echo "Restoring RootExplorer.apk..."
+	$bb rm -f com.speedsoftware.rootexplorer-1.odex
+	$bb echo
+fi;
+if $bb [ -f com.speedsoftware.rootexplorer-2.odex ];
+then
+	$bb echo "Restoring RootExplorer.apk..."
+	$bb rm -f com.speedsoftware.rootexplorer-2.odex
+	$bb echo
+fi;
+}
+
+br() {
+cd $DIRX
+if $bb [ -f bb1 ];
+then
+	$bb echo "Restoring BusyBox..."
+	$bb mv -f bb1 busybox
+	$bb echo
+fi;
+cd $DIR
+if $bb [ -d $TMPDIR ];
+then
+	$bb echo "Removing Temp..."
+	$bb rm -r -f $TMPDIR
+	$bb echo
+fi;
+$bb echo "Odex Complete!"
+if $bb [[ "$vibration" != "none" ]];
+then
+	$bb echo 300 > $vibration
+fi;
+$bb echo
+}
+
+ar() {
+cd $DIRSAPP
+if $bb [ -f RootExplorer.odex ];
+then
+	$bb echo "Restoring RootExplorer.apk..."
+	$bb rm -f RootExplorer.odex
+	$bb echo
+fi;
+if $bb [ -f AT.odex ];
+then
+	$bb echo "Restoring AndroidTerm..."
+	$bb rm -f AndroidTerm.odex
+	$bb mv -f AT.odex AndroidTerm.odex
+	$bb rm -f AndroidTerm.apk
+	$bb mv -f AT.apk AndroidTerm.apk
+	$bb echo
+fi;
+cd $DIRDAL
+if $bb [ -f system@app@AndroidTerm.apk@classes.dex ];
+then
+	$bb rm -f system@app@AndroidTerm.apk@classes.dex
+fi;
+}
+
+oc()
+{
+$bb echo "Rebooting..."
+$bb echo
+$bb reboot
+}
+
+if $bb [[ "${2}" == "-log" ]];
+then
+	$bb clear
+	if $bb [[ "`$bb id -u`" == "0" ]];
+	then
+		if $bb [ -f /sys/class/timed_output/vibrator/enable ];
+		then
+			vibration="/sys/class/timed_output/vibrator/enable"
+		else
+			vibration="none"
+		fi;
+	else
+		vibration="none"
+	fi;
+	$bb echo "Log Activated!"
+	if $bb [[ "$vibration" != "none" ]];
+	then
+		$bb echo 200 > $vibration
+	fi;
+	LOG=/sdcard/odex.log
+	if [ -f $LOG ];
+	then
+		$bb rm -f $LOG
+	fi
+	$bb sleep 1
+	dexo ${1} | $bb tee -a $LOG
+	exit 1
+fi
+
+if $bb [[ "${1}" == "" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	$bb echo "Type 'dexo -h' To Show Commands"
+	$bb echo
+	exit 1
+elif $bb [[ "${1}" == "-h" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		freepre
+	fi;
+	freesys
+	$bb echo
+	$bb echo "----------------------------------------"
+	$bb echo "Possible Command For Your Phone:"
+	$bb echo "dexo -dat | Odex Data Apps"
+	if [[ "$CONSBS" == "1" ]];
+	then
+		$bb echo "dexo -bs  | Odex BootStrap"
+	fi;
+	if [[ "$CONSFR" == "1" ]];
+	then
+		$bb echo "dexo -fr  | Odex BootStrap and Framework"
+	fi;
+ 	if $bb [ -f /sdcard/csa.txt ];
+	then
+		if [[ "$CONSCSA" == "1" ]];
+		then
+			$bb echo "dexo -csa | Odex Custom System Apps"
+		fi;
+		if [[ "$CONSFCS" == "1" ]];
+		then
+			$bb echo "dexo -fcs | Odex BS-FR-CSA"
+		fi;
+	fi;
+	if [[ "$CONSSYS" == "1" ]];
+	then
+		$bb echo "dexo -sys | Odex System Apps"
+	fi;
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [[ "$CONPA" == "1" ]];
+		then
+			$bb echo "dexo -pa  | Odex Preaload Apps"
+		fi;
+	fi;
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [ -f /sdcard/cpa.txt ];
+		then
+			if $bb [[ "CONCPA" == "1" ]];
+			then
+				$bb echo "dexo -cpa | Odex Custom Preload Apps"
+			fi;
+		fi;
+	fi;
+	if [[ "$CONSALL" == "1" ]];
+	then
+		$bb echo "dexo -all | Odex All Rom"
+	fi;
+	$bb echo "----------------------------------------"
+	$bb echo "Not Recommended Command For Your Phone:"
+	if [[ "$CONSBS" == "0" ]];
+	then
+		$bb echo "dexo -bs  | Odex BootStrap"
+	fi;
+	if [[ "$CONSFR" == "0" ]];
+	then
+		$bb echo "dexo -fr  | Odex BootStrap and Framework"
+	fi;
+	if $bb [ -f /sdcard/csa.txt ];
+	then
+		if [[ "$CONSCSA" == "0" ]];
+		then
+			$bb echo "dexo -csa | Odex Custom System Apps"
+		fi;
+		if [[ "$CONSFCS" == "0" ]];
+		then
+			$bb echo "dexo -fcs | Odex BS-FR-CSA"
+		fi;
+	fi;
+	if [[ "$CONSSYS" == "0" ]];
+	then
+		$bb echo "dexo -sys | Odex System Apps"
+	fi;
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [[ "$CONPA" == "0" ]];
+		then
+			$bb echo "dexo -pa | Odex Preload Apps"
+		fi;
+	fi;
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [ -f /sdcard/cpa.txt ];
+		then
+			if $bb [[ "CONCPA" == "0" ]];
+			then
+				$bb echo "dexo -cpa | Odex Preaload System Apps"
+			fi;
+		fi;
+	fi;
+	if [[ "$CONSALL" == "0" ]];
+	then
+		$bb echo "dexo -all | Odex All Rom"
+	fi;
+	$bb echo "----------------------------------------"
+	$bb echo "Command Not Possible For Your Phone:"
+	if $bb [[ "$PART" == "no" ]];
+	then
+		$bb echo "dexo -pa  | Odex Preload Apps"
+		$bb echo "dexo -cpa | Odex Custom Preload Apps"
+	fi;
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [ ! -f /sdcard/cpa.txt ];
+		then
+			if $bb [[ "CONCPA" == "1" ]];
+			then
+				$bb echo "dexo -cpa | Odex Preaload System Apps"
+			fi;
+		fi;
+	fi;
+	if $bb [ ! -f /sdcard/csa.txt ];
+	then
+		$bb echo "dexo -csa | Odex Custom System Apps"
+		$bb echo "dexo -fcs | Odex BS-FR-CSA"
+	fi;
+	$bb echo "----------------------------------------"
+	$bb echo
+	$bb echo "Secondary Commands:"
+	$bb echo "+ Type 'dexo -(one of the option that you have decided) -log' To Activate Log"
+	$bb echo "+ Type 'dexo -ch' To Show Changelog"
+	$bb echo
+	$bb echo "Go to my webpage on xda to see more info"
+	$bb echo "http://forum.xda-developers.com/showthread.php?t=2162413"
+	$bb echo
+	$bb echo "MatrixDJ96 - XDA Senior Member"
+	$bb echo
+	exit 1
+elif $bb [[ "${1}" == "-bs" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	su
+	freesys
+	cbs
+	preparing
+	go
+	bs
+	br
+	oc
+elif $bb [[ "${1}" == "-fr" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	su
+	freesys
+	cfr
+	preparing
+	go
+	bs
+	fr
+	br
+	oc
+elif $bb [[ "${1}" == "-csa" ]];
+then
+	$bb clear
+	info
+ 	if $bb [ -f /sdcard/csa.txt ];
+	then
+		$bb echo
+		su
+		freesys
+		ccsa
+		preparing
+		go
+		csa
+		br
+		ar
+		oc
+	else
+		$bb echo
+		$bb echo "Command Not Possible For Your System"
+		$bb echo
+		exit 1
+	fi;
+elif $bb [[ "${1}" == "-sys" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	su
+	freesys
+	csys
+	preparing
+	go
+	sys
+	br
+	ar
+	oc
+elif $bb [[ "${1}" == "-fcs" ]];
+then
+	$bb clear
+	info
+ 	if $bb [ -f /sdcard/csa.txt ];
+	then
+		$bb echo
+		su
+		freesys
+		cfcs
+		preparing
+		go
+		bs
+		fr
+		csa
+		br
+		ar
+		oc
+	else
+		$bb echo
+		$bb echo "Command Not Possible For Your System"
+		$bb echo
+		exit 1
+	fi;
+elif $bb [[ "${1}" == "-pa" ]];
+then
+	$bb clear
+	info
+ 	if $bb [[ "$PART" == "yes" ]];
+	then
+		$bb echo
+		su
+		freepre
+		cpr
+		preparing
+		go
+		pa
+		br
+		oc
+	else
+		$bb echo
+		$bb echo "Command Not Possible For Your System"
+		$bb echo
+		exit 1
+	fi;
+elif $bb [[ "${1}" == "-cpa" ]];
+then
+	$bb clear
+	info
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		if $bb [ -f /sdcard/cpa.txt ];
+		then
+			$bb echo
+			su
+			freepre
+			ccpa
+			preparing
+			go
+			cpa
+			br
+			oc
+		else
+			$bb echo
+			$bb echo "Command Not Possible For Your System"
+			$bb echo
+			exit 1
+		fi;
+	else
+		$bb echo
+		$bb echo "Command Not Possible For Your System"
+		$bb echo
+		exit 1
+	fi;
+elif $bb [[ "${1}" == "-all" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	su
+	freesys
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		freepre
+	fi;
+	call
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		cpr
+	fi;
+	preparing
+	go
+	bs
+	fr
+	if $bb [[ "$PART" == "yes" ]];
+	then
+		pa
+	fi;
+	sys
+	br
+	ar
+	oc
+elif $bb [[ "${1}" == "-dat" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	su
+	preparing
+	go
+	dat
+	br
+	oc
+elif $bb [[ "${1}" == "-ch" ]];
+then
+	$bb clear
+	info
+	$bb echo
+	$bb echo "Changelog:"
+	$bb echo
+	$bb echo "Universal Odex Version 6.2"
+	$bb echo "- Added 1 New Command To Odex Your Rom"
+	$bb echo "> Now You Can Odex:"
+	$bb echo "+ Only Specific Preload Apps ('dexo -cpa')"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 6.1 Private"
+	$bb echo "- Fixed Minor Bug"
+	$bb echo "- Rewritten Script"
+	$bb echo "- Changed Command 'dexo -psa' In 'dexo -pa'"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 6.0 Private"
+	$bb echo "- Added Controll Of Free Space In System"
+	$bb echo "- Added New Command To Activate Log"
+	$bb echo "> Type 'dexo -(one of the option that you have decided) -log'"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 5.2 Private"
+	$bb echo "- Removed 'fixbox' Script Because Now There Aren't Necessary Symlink Of BusyBox"
+	$bb echo "- Added Check Of Root Permission"
+	$bb echo "- Updated Command 'dexo -all' To Odex Also Preload Apps"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 5.1"
+	$bb echo "- Fixed Bug Of Odex System And Preload"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 5.0"
+	$bb echo "- Added 1 New Command To Odex Your Rom"
+	$bb echo "> Now You Can Odex:"
+	$bb echo "+ Only Preload Apps ('dexo -psa') (if your phone has preload partition)"
+	$bb echo "- Skipped Odex Of RootExplorer If Is Installed In System Or Preload Or Data (beacause old version can't be odexed and i prefer old version)"
+	$bb echo "- Fixed A Lot Of Bug"
+	$bb echo "- Changed A Little Bit The Interface"
+	$bb echo "- More Universal Now"
+	$bb echo "- Add New Script (Type 'fixbox') To Fix Error Of Busybox (Like clear: not found)"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.2.3"
+	$bb echo "- Added 1 New Command To Odex Your Rom"
+	$bb echo "> Now You Can Odex:"
+	$bb echo "+ App In Data ('dexo -dat')"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.2.2"
+	$bb echo "- Fixed Grep Of 'dexo -csa' And 'dexo -fcs'"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.2.1"
+	$bb echo "- Fixed Bug Of Commands 'dexo -csa' And 'dexo -fcs'"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.2 Beta"
+	$bb echo "- Added 2 New Command To Odex Your Rom"
+	$bb echo "> Now You Can Odex:"
+	$bb echo "+ Only Specific App ('dexo -csa')"
+	$bb echo "+ Framework With Specific App ('dexo -fcs')"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.1.3"
+	$bb echo "- Fixed BootLoop On Device Like Galaxy S2 (Fixed Permission)"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.1.2"
+	$bb echo "- Updated Android Terminal Emulator"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.1.1.1"
+	$bb echo "- More Compatible"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.1.1"
+	$bb echo "- Fixed Remove Temp File"
+	$bb echo "- Fixed Zipalign For ICS And JB"
+	$bb echo "- System Now Is Mounted By Busybox"
+	$bb echo "- Add Info For Android JB 4.3 And KLP 5.0"
+	$bb echo "- System Apps Now Have The BCP For Odex"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.0.1"
+	$bb echo "- Edited Script To Fix Some Words"
+	$bb echo "----------------------------------"
+	$bb echo "Universal Odex Version 4.0"
+	$bb echo "- Added 4 New Command To Odex Your Rom:"
+	$bb echo "> Now You Can Odex:"
+	$bb echo "+ Only Bootstrap ('dexo -bs')"
+	$bb echo "+ Bootstrap and Framework ('dexo -fr')"
+	$bb echo "+ Only System Apps ('dexo -sys')"
+	$bb echo "+ All Rom ('dexo -all')" 
+	$bb echo
+	exit 1
+else
+	$bb clear
+	info
+	$bb echo
+	$bb echo "Unknow Command For 'dexo'"
+	$bb echo
+	exit 1
+fi;
+
+#  _    _   _____  _______  ____       
+# | \  / | |     |    |    |    |  |  \       / 
+# |  \/  | |_____|    |    |____|  |    \ _ /   
+# |      | |     |    |    |   \   |    /   \   
+# |      | |     |    |    |    \  |  /       \ 
