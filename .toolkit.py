@@ -2,10 +2,10 @@
 # coding: utf8
 ##########################################
 # Acer Iconia Toolkit                    #
-# version:                0.9.0          #
-# date:                   2015-01-31     #
+# version:                0.9.1          #
+# date:                   2015-02-02     #
 ##########################################
-version = "v0.9.0"
+version = "v0.9.1"
 
 from struct import calcsize
 from time import sleep
@@ -472,7 +472,7 @@ def unix_root_from_scratch():
 
     # Add-on for Xposed Framework
     print("")
-    print("Do you want to use Xposed Framework (2.7 experimental1)?")
+    print("Do you want to use Xposed Framework (2.7 experimental1) -- DOES NOT WORK AT THE MOMENT?")
     print("[Y]es")
     print("[N]o")
     print("[Q]uit")
@@ -487,6 +487,24 @@ def unix_root_from_scratch():
         print("E: Only 'Y', 'N' or 'Q' are allowed!")
         main()
     # End of Add-on for Xposed Framework
+
+    # Add-on for writeable external sdcard
+    print("")
+    print("Do you want to make your external SDCard writeable?")
+    print("[Y]es")
+    print("[N]o")
+    print("[Q]uit")
+    selection = user_input("Enter a selection: ")
+    if selection == "q" or selection == "Q":
+        sys.exit(0)
+    if selection == "y" or selection == "Y":
+        extsdwrite = True
+    elif selection == "n" or selection == "N":
+        extsdwrite = False
+    else:
+        print("E: Only 'Y', 'N' or 'Q' are allowed!")
+        main()
+    # End of Add-on for writeable external sdcard
 
     # Add-on for doing it all at once
     global allatonce
@@ -576,9 +594,14 @@ def unix_root_from_scratch():
         add_Xposed()
     # End of Add-on for Xposed Framework
 
+    # Add-on for writeable external sdcard
+    if extsdwrite:
+        print(timestamp() + ": Adding new platform.xml for writeable external sdcard...")
+        change_extsdwrite()
+    # End of Add-on for writeable external sdcard
+
     # unmount system.img.gz
     print(timestamp() + ": Unmounting system.img...")
-    subprocess_call("sudo chmod 06755 /media/iconia/bin/su")
     subprocess_call("sudo umount /media/iconia")
     subprocess_call("sudo rm -rf /media/iconia")
     subprocess_call("gzip system.img")
@@ -692,6 +715,22 @@ def add_Xposed():
             print(timestamp() + ": Successfully mounted pulled system image and added Xposed.")
     except IOError:
         print(timestamp() + ": E: Couldn't add Xposed to system.img.")
+        print(timestamp() + ": Cleaning up...")
+        subprocess_call("sudo umount /media/iconia")
+        subprocess_call("sudo rm -rf /media/iconia")
+        subprocess_call("rm system.img*")
+        wait_for_enter_exit_error()
+
+
+def change_extsdwrite():
+    subprocess_call("sudo cp -a /media/iconia/etc/permissions/platform.xml /media/iconia/etc/permissions/platform.xml.orig")
+    subprocess_call("sudo cp bin/platform.xml /media/iconia/etc/permissions")
+    subprocess_call("sudo chmod 0644 /media/iconia/etc/permissions/platform.xml")
+    try:
+        with open("/media/iconia/etc/permissions/platform.xml.orig"):
+            print(timestamp() + ": Successfully mounted pulled system image and added platform.xml for writeable external sdcard.")
+    except IOError:
+        print(timestamp() + ": E: Couldn't add platform.xml for writeable external sdcard to system.img.")
         print(timestamp() + ": Cleaning up...")
         subprocess_call("sudo umount /media/iconia")
         subprocess_call("sudo rm -rf /media/iconia")

@@ -1,4 +1,11 @@
+v0.9.1
+======
+- Added option to enable write access to external sdcard
+- Added comment for Xposed not working
+- Removed su delete command in invalid section
+
 v0.9.0
+======
 - A1-811: Kitkat Support
 - A1-xxx: Added proper su-binary
 - Added timestamps
