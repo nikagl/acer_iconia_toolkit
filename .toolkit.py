@@ -16,8 +16,6 @@ import subprocess
 import sys
 import time
 
-# test comment
-
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", help="Print debug messages", action="store_true")
 debug = parser.parse_args().debug
