@@ -2,10 +2,10 @@
 # coding: utf8
 ##########################################
 # Acer Iconia Toolkit                    #
-# version:                0.9.1          #
-# date:                   2015-02-02     #
+# version:                0.9.2          #
+# date:                   2015-02-07     #
 ##########################################
-version = "v0.9.1"
+version = "v0.9.2"
 
 from struct import calcsize
 from time import sleep
@@ -58,6 +58,8 @@ dd_seek      = ""
 device       = ""
 driver_url   = ""
 dumchar_line = ""
+enableXposed = False
+allatonce    = False
 a1           = False
 a1_811       = False
 b1_710       = False
@@ -81,6 +83,8 @@ def main():
     if selection == "q" or selection == "Q":
         sys.exit(0)
 
+    global enableXposed
+    global allatonce
     global system_image_target_dir
     global kitkat
     global a1
@@ -277,6 +281,8 @@ def swap_menu():
     if backup:
         restore_ext_sd(config_internal)
 
+#    print(timestamp() + ": Trying to reboot your device...")
+#    subprocess_call(adb + "shell reboot")
     print("")
     print(timestamp() + ": SUCCESS!")
     print("The SD partitions of your " + device + " are now successfully swapped.")
@@ -440,7 +446,6 @@ def pull_system_image():
 
     print(timestamp() + ": Successfully created a system.img.gz under " + system_image_target_dir + ".")
 
-    print("")
     print(timestamp() + ": Pulling system.img.gz from " + device + " (This can take upto 15 minutes)...")
     subprocess_call(adb + "pull " + system_image_target_dir + "/system.img.gz")
     try:
@@ -471,21 +476,22 @@ def unix_root_from_scratch():
     # End of Add-on for SuperSU Root
 
     # Add-on for Xposed Framework
-    print("")
-    print("Do you want to use Xposed Framework (2.7 experimental1) -- DOES NOT WORK AT THE MOMENT?")
-    print("[Y]es")
-    print("[N]o")
-    print("[Q]uit")
-    selection = user_input("Enter a selection: ")
-    if selection == "q" or selection == "Q":
-        sys.exit(0)
-    if selection == "y" or selection == "Y":
-        Xposed = True
-    elif selection == "n" or selection == "N":
-        Xposed = False
-    else:
-        print("E: Only 'Y', 'N' or 'Q' are allowed!")
-        main()
+    if EnableXposed:
+        print("")
+        print("Do you want to use Xposed Framework (2.7 experimental1) -- DOES NOT WORK AT THE MOMENT?")
+        print("[Y]es")
+        print("[N]o")
+        print("[Q]uit")
+        selection = user_input("Enter a selection: ")
+        if selection == "q" or selection == "Q":
+            sys.exit(0)
+        if selection == "y" or selection == "Y":
+            Xposed = True
+        elif selection == "n" or selection == "N":
+            Xposed = False
+        else:
+            print("E: Only 'Y', 'N' or 'Q' are allowed!")
+            main()
     # End of Add-on for Xposed Framework
 
     # Add-on for writeable external sdcard
@@ -507,12 +513,8 @@ def unix_root_from_scratch():
     # End of Add-on for writeable external sdcard
 
     # Add-on for doing it all at once
-    global allatonce
     print("")
     print("Do you want to do everything all at once (= do not wait for input before restoring system.img?")
-    print("[Y]es")
-    print("[N]o")
-    print("[Q]uit")
     print("")
     print("Make sure to:")
     print("1. Plugin both computer and device into power")
@@ -521,6 +523,10 @@ def unix_root_from_scratch():
     print("4. Make sure to wait till everything succeeds!")
     print("")
     print("Failure to do so may cause disconnect in the restore procedure which can brick the device!")
+    print("")
+    print("[Y]es")
+    print("[N]o")
+    print("[Q]uit")
     print("")
     selection = user_input("Enter a selection: ")
     if selection == "q" or selection == "Q":
@@ -537,7 +543,11 @@ def unix_root_from_scratch():
     print("")
     print("================== Root =================")
     start_info()
-    print("The following procedures will take about 10 minutes. To finally play back the rooted system.img.gz a confirmation will be needed then.")
+    print("The following procedures can take up to 30 minutes!")
+    if allatonce:
+		print("To finally play back the rooted system.img.gz a confirmation will be needed then.")
+    else:
+		print("To finally play back the rooted system.img.gz NO confirmation will be needed (all at once).")
     wait_for_enter_start()
 
     subprocess_call("sudo chmod +x " + bin_folder + "adb")
@@ -548,7 +558,6 @@ def unix_root_from_scratch():
     check_dumchar_info()
     pull_system_image()
 
-    print("")
     print(timestamp() + ": Adding stuff to system.img ...")
     print(timestamp() + ": Unzipping system.img ...")
     
@@ -706,7 +715,8 @@ def add_SuperSU():
 
 
 def add_Xposed():
-    subprocess_call("sudo cp bin/de.robv.android.xposed.installer_v33_36570c.apk /media/iconia/app/")
+#    subprocess_call("sudo rm /media/iconia/app/de.robv.android.xposed.installer_v33_36570c.apk")
+#    subprocess_call("sudo rm /media/iconia/app/de.robv.android.xposed.installer_v32_de4f0d.apk")
     subprocess_call("sudo cp -a /media/iconia/bin/app_process /media/iconia/bin/app_process.orig")
     subprocess_call("sudo cp bin/de.robv.android.xposed.installer_v33_36570c/assets/arm/app_process_xposed_sdk16 /media/iconia/bin/app_process")
     subprocess_call("sudo chmod 0755 /media/iconia/bin/app_process")
@@ -797,9 +807,11 @@ def write_system_image():
     if debug:
         p.stdout.flush()
 
+#    print(timestamp() + ": Trying to reboot your device...")
+#    subprocess_call(adb + "shell reboot")
     print("")
     print(timestamp() + ": SUCCESS!")
-    print(timestamp() + ": Your " + device + " is now rooted. Unplug your tablet and reboot. Install Superuser from the Google Play Store and have fun ;-)")
+    print(timestamp() + ": Your " + device + " is now rooted. Unplug your tablet and reboot (if reboot was not successful. Install Superuser from the Google Play Store and have fun ;-)")
     print(timestamp() + ": If your tablet is turned off and doesn't turn on anymore, take a pin and press the reset button on the right side of the Iconia B1, above the power button.")
     print_thanks()
     wait_for_enter_exit_success()
@@ -835,6 +847,8 @@ def remove_su_binary():
         print(timestamp() + ": Your " + device + " is already unrooted.")
         wait_for_enter_exit_error()
     else:
+#        print(timestamp() + ": Trying to reboot your device...")
+#        subprocess_call(adb + "shell reboot")
         print("")
         print(timestamp() + ": SUCCESS!")
         print(timestamp() + ": Your " + device + " is now unrooted.")
@@ -958,7 +972,6 @@ def progress_root():
 
 
 def push_busybox():
-    print("")
     print(timestamp() + ": Copying Busybox to your " + device + ".")
     subprocess_call(adb + "push " + busybox + " /data/local/tmp")
     subprocess_call(adb + "shell chmod 755 /data/local/tmp/busybox")
@@ -966,7 +979,6 @@ def push_busybox():
 
 
 def start_telnet_server():
-    print("")
     print(timestamp() + ": Starting Telnet server on your " + device + ".")
 
     out = subprocess.check_output(adb + "shell dumpsys power", shell=True)
@@ -975,7 +987,6 @@ def start_telnet_server():
     print_debug(out)
 
     check_device_powered(out)
-    print("")
     print(timestamp() + ": Turn on your " + device + " now and unlock the screen.")
     if kitkat:
         print(timestamp() + ": Make sure your " + device + " is and stays(!) in PORTRAIT mode!")
@@ -1033,7 +1044,6 @@ def start_telnet_server():
         sleep(0.1)
         subprocess_call(adb +       'shell input tap 365 530')
         sleep(0.1)
-        print("")
         print(timestamp() + ": Removing old characters. This may take a minute or two!")
         for _ in range(80):
             subprocess_call(adb +   'shell input keyevent KEYCODE_FORWARD_DEL')
@@ -1078,7 +1088,6 @@ def start_telnet_server():
         start_telnet_server()
 
     print(timestamp() + ": Successfully started Telnet server on your " + device + ".")
-    print("")
 
 
 def check_dumchar_info():
