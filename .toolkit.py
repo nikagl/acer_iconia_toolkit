@@ -83,8 +83,6 @@ def main():
     if selection == "q" or selection == "Q":
         sys.exit(0)
 
-    global enableXposed
-    global allatonce
     global system_image_target_dir
     global kitkat
     global a1
@@ -456,6 +454,8 @@ def pull_system_image():
         wait_for_enter_exit_error()
 
 def unix_root_from_scratch():
+    global allatonce
+    
     # Add-on for SuperSU Root
     print("")
     print("Do you want to use the originally included superuser or SuperSU-v2.40?")
