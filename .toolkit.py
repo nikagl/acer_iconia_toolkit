@@ -811,7 +811,7 @@ def write_system_image():
 #    subprocess_call(adb + "shell reboot")
     print("")
     print(timestamp() + ": SUCCESS!")
-    print(timestamp() + ": Your " + device + " is now rooted. Unplug your tablet and reboot (if reboot was not successful. Install Superuser from the Google Play Store and have fun ;-)")
+    print(timestamp() + ": Your " + device + " is now rooted. Unplug your tablet and reboot. Install Superuser from the Google Play Store and have fun ;-)")
     print(timestamp() + ": If your tablet is turned off and doesn't turn on anymore, take a pin and press the reset button on the right side of the Iconia B1, above the power button.")
     print_thanks()
     wait_for_enter_exit_success()
