@@ -83,6 +83,7 @@ def main():
     if selection == "q" or selection == "Q":
         sys.exit(0)
 
+    global enableXposed
     global system_image_target_dir
     global kitkat
     global a1
@@ -476,7 +477,7 @@ def unix_root_from_scratch():
     # End of Add-on for SuperSU Root
 
     # Add-on for Xposed Framework
-    if EnableXposed:
+    if enableXposed:
         print("")
         print("Do you want to use Xposed Framework (2.7 experimental1) -- DOES NOT WORK AT THE MOMENT?")
         print("[Y]es")
@@ -1039,7 +1040,7 @@ def start_telnet_server():
             subprocess_call(adb +       'shell input tap 400 320')
         else:
             subprocess_call(adb +       'shell input tap 400 275')
-        sleep(0.1)
+        sleep(0.5)
         subprocess_call(adb +       'shell input tap 745 55')
         sleep(0.1)
         subprocess_call(adb +       'shell input tap 365 530')
