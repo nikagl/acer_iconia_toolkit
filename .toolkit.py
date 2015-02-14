@@ -493,6 +493,8 @@ def unix_root_from_scratch():
         else:
             print("E: Only 'Y', 'N' or 'Q' are allowed!")
             main()
+    else:
+        Xposed = False
     # End of Add-on for Xposed Framework
 
     # Add-on for writeable external sdcard
@@ -1040,7 +1042,7 @@ def start_telnet_server():
             subprocess_call(adb +       'shell input tap 400 320')
         else:
             subprocess_call(adb +       'shell input tap 400 275')
-        sleep(0.5)
+        sleep(1.0)
         subprocess_call(adb +       'shell input tap 745 55')
         sleep(0.1)
         subprocess_call(adb +       'shell input tap 365 530')
@@ -1168,6 +1170,12 @@ def check_firmware_version():
             if a1:
                 if "Acer_AV052_A1-810_" in l:
                     fw_version = l.split("Acer_AV052_A1-810_")[1].split("_WW_GEN1")[0]
+                elif "Acer_AV052_A1-811_" in l:
+                    fw_version = l.split("Acer_AV052_A1-811_")[1].split("_WW_GEN1")[0]
+                elif "Acer_AV0K0_A1-810_" in l:
+                    fw_version = l.split("Acer_AV0K0_A1-810_")[1].split("_WW_GEN1")[0]
+                elif "Acer_AV0K0_A1-811_" in l:
+                    fw_version = l.split("Acer_AV0K0_A1-811_")[1].split("_WW_GEN1")[0]
                 elif "Acer_AV052_B1-711_" in l:
                     fw_version = l.split("Acer_AV052_B1-711_")[1].split("_WW_GEN1")[0]
                 elif "Acer_AV052_A3-A10_" in l:
