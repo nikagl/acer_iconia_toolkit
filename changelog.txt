@@ -1,3 +1,9 @@
+v0.9.3
+======
+- Fix Xposed removal
+- Wait longer for MTKLogger to press settings
+- Add 811 and KK 810 and 811 to root from system.img
+
 v0.9.2
 ======
 - Removed Xposed till it works
