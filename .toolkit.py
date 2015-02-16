@@ -2,10 +2,10 @@
 # coding: utf8
 ##########################################
 # Acer Iconia Toolkit                    #
-# version:                0.9.2          #
-# date:                   2015-02-07     #
+# version:                0.9.4          #
+# date:                   2015-02-16     #
 ##########################################
-version = "v0.9.2"
+version = "v0.9.4"
 
 from struct import calcsize
 from time import sleep
@@ -63,7 +63,9 @@ allatonce    = False
 a1           = False
 a1_811       = False
 b1_710       = False
+s1           = False
 kitkat       = False
+SuperSU      = False
 system_image_target_dir = "/cache"
 
 
@@ -76,6 +78,7 @@ def main():
     print("[1] Acer Iconia B1-A71")
     print("[2] Acer Iconia A1-810 / A1-811 / A3-A10 / B1-711 / B1-720")
     print("[3] Acer Iconia B1-710 / B1-A710")
+    print("[4] Acer Liquid S1 (S510 / A10)")
     print("[Q] Quit")
     print("")
 
@@ -89,11 +92,13 @@ def main():
     global a1
     global a1_811
     global b1_710
+    global s1
     global device
     global driver_url
     global dd_count
     global dd_seek
     global su
+    global SuperSU
 
     if selection == "1":
         su = os.path.join("bin", "b1", "su")
@@ -127,6 +132,7 @@ def main():
             device = "Acer Iconia A1-810 / A3-A10 / B1-711 / B1-720 running KitKat"
             system_image_target_dir = "/data/local/tmp"
         elif selection2 == "3":
+            SuperSU = True
             kitkat = True
             a1_811 = True
             device = "Acer Iconia A1-811 running KitKat"
@@ -142,8 +148,19 @@ def main():
         driver_url = "http://goo.gl/Otbkb"
         dd_count = "262144"
         dd_seek = "9448"
+    elif selection == "4":
+        kitkat = True
+        s1 = True
+        device = "Acer Liquid S1 (S510 / A10)"
+        driver_url = "http://goo.gl/i56Gn"
+        dd_count = "262144"
+        dd_seek = "23808"
+        SuperSU = True
+        dumchar_line = "android 0x0000000040000000 0x0000000005d00000 2 /dev/block/mmcblk0p5"
+        kitkat = True
+        system_image_target_dir = "/data/local/tmp"
     else:
-        print("E: Only '1', '2', '3' and 'Q' is allowed!")
+        print("E: Only '1', '2', '3', '4' and 'Q' is allowed!")
         main()
     menu()
     sys.exit(0)
@@ -456,24 +473,26 @@ def pull_system_image():
 
 def unix_root_from_scratch():
     global allatonce
+    global SuperSU
     
     # Add-on for SuperSU Root
-    print("")
-    print("Do you want to use the originally included superuser or SuperSU-v2.40?")
-    print("[1]superuser")
-    print("[2]SuperSU")
-    print("[Q]uit")
-    
-    selection = user_input("Enter a selection: ")
-    if selection == "q" or selection == "Q":
-        sys.exit(0)
-    if selection == "1":
-        SuperSU = False
-    elif selection == "2":
-        SuperSU = True
-    else:
-        print("E: Only '1', '2' or 'Q' are allowed!")
-        main()
+    if not SuperSU:
+        print("")
+        print("Do you want to use the originally included superuser or SuperSU-v2.46?")
+        print("[1]superuser")
+        print("[2]SuperSU")
+        print("[Q]uit")
+        
+        selection = user_input("Enter a selection: ")
+        if selection == "q" or selection == "Q":
+            sys.exit(0)
+        if selection == "1":
+            SuperSU = False
+        elif selection == "2":
+            SuperSU = True
+        else:
+            print("E: Only '1', '2' or 'Q' are allowed!")
+            main()
     # End of Add-on for SuperSU Root
 
     # Add-on for Xposed Framework
@@ -1005,7 +1024,45 @@ def start_telnet_server():
     if kitkat:
         subprocess_call(adb +       'shell am start -n com.mediatek.engineermode/.EngineerMode\n')
     sleep(0.5)
-    if not kitkat:
+    if s1:
+        for _ in range(4):
+            subprocess_call(adb +   'shell input tap 660 180')
+            sleep(0.1)
+        subprocess_call(adb +       'shell input tap 150 670')
+        sleep(1.0)
+        subprocess_call(adb +       'shell input tap 660 100')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input tap 230 990')
+        sleep(0.1)
+        print(timestamp() + ": Removing old characters. This may take a minute or two!")
+        for _ in range(80):
+            subprocess_call(adb +   'shell input keyevent KEYCODE_FORWARD_DEL')
+            subprocess_call(adb +   'shell input keyevent KEYCODE_DEL')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "/data/local/tmp/busybox"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input keyevent KEYCODE_SPACE')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "telnetd"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input keyevent KEYCODE_SPACE')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "-l"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input keyevent KEYCODE_SPACE')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "/system/bin/sh"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input keyevent KEYCODE_SPACE')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "-p"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input keyevent KEYCODE_SPACE')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input text "1234"')
+        sleep(0.1)
+        subprocess_call(adb +       'shell input tap 515 390')
+    elif not kitkat:
         for _ in range(4):
             subprocess_call(adb +   'shell input keyevent KEYCODE_DPAD_DOWN')
             sleep(0.1)
@@ -1122,6 +1179,14 @@ def check_dumchar_info():
                "/dev/block/mmcblk0p3" in out:
                 string_found = True
                 break
+        elif s1:
+            if "android" in out and \
+               "0x0000000040000000" in out and \
+               "0x0000000005d00000" in out and \
+               " 2 " in out and \
+               "/dev/block/mmcblk0p5" in out:
+                string_found = True
+                break
         else:
             if "android" in out and \
                "0x00000000020e8000" in out and \
@@ -1140,8 +1205,10 @@ def check_dumchar_info():
     if not string_found:
         if a1:
             print(timestamp() + ": E: The line 'android 0x0000000004500000 0x0000000040000000 2 /dev/block/mmcblk0p5' wasn't found in /proc/dumchar_info.")
-        if b1_710:
+        elif b1_710:
             print(timestamp() + ": E: The line 'android 0x0000000040000000 0x00000000024e8000 2 /dev/block/mmcblk0p3' wasn't found in /proc/dumchar_info.")
+        elif s1:
+            print(timestamp() + ": E: The line 'android 0x0000000040000000 0x0000000005d00000 2 /dev/block/mmcblk0p5' wasn't found in /proc/dumchar_info.")
         else:
             print(timestamp() + ": E: The line 'android 0x0000000026500000 0x00000000020e8000 2 /dev/block/mmcblk0p3' wasn't found in /proc/dumchar_info.")
             print(timestamp() + ": E: The line 'android 0x0000000015e00000 0x00000000020e8000 2 /dev/block/mmcblk0p3' wasn't found in /proc/dumchar_info.")
@@ -1176,6 +1243,8 @@ def check_firmware_version():
                     fw_version = l.split("Acer_AV0K0_A1-810_")[1].split("_WW_GEN1")[0]
                 elif "Acer_AV0K0_A1-811_" in l:
                     fw_version = l.split("Acer_AV0K0_A1-811_")[1].split("_WW_GEN1")[0]
+                elif "Acer_AV0K0_S510_" in l:
+                    fw_version = l.split("Acer_AV0K0_S510_")[1].split("_WW_GEN1")[0]
                 elif "Acer_AV052_B1-711_" in l:
                     fw_version = l.split("Acer_AV052_B1-711_")[1].split("_WW_GEN1")[0]
                 elif "Acer_AV052_A3-A10_" in l:

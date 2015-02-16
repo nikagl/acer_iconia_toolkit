@@ -4,3 +4,4 @@ bin/posix/64/logcat.txt~
 bin/posix/64/logcat1.txt
 bin/nt/64/last_kmsg
 *.zip
+*.bak
