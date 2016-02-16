@@ -1352,7 +1352,7 @@ def start_info():
         if a1:
             print("6. !!! UNPLUG ALL OTHER DEVICES!!!")
         print("")
-        print("If you sucessfully applied the steps above, we can now start.")
+        print("If you successfully applied the steps above, we can now start.")
         print("You can always abort by pressing Ctrl+C")
         print("")
     else:
@@ -1363,7 +1363,7 @@ def start_info():
         if a1:
             print("4. !!! UNPLUG ALL OTHER DEVICES!!!")
         print("")
-        print("If you sucessfully applied the steps above, we can now start.")
+        print("If you successfully applied the steps above, we can now start.")
         print("You can always abort by pressing Ctrl+C.")
         print("")
 
@@ -1407,7 +1407,7 @@ def print_debug(string):
         print(string)
 
 def check_device_powered(out):
-    if a1:
+    if a1 or s1:
         return
 
     # device in standby? -> Wake up
